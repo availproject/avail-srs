@@ -133,3 +133,9 @@ let degree = 1 << 10; // say 1024 for this case
 let pp = PublicParameters::from_bytes(&data[..]).unwrap();
 let (proving_key, verification_key) = pp.trim(degree).unwrap(); // create/ verify proofs !
 ```
+
+## Acknowledgement
+
+- We make use of Filecoin hosted phase1 powers of tau file ( read `challenge_19` )
+- We also use slightly modified https://github.com/arielgabizon/powersoftau, for extracting out parameters. Check [tree](./powersoftau) for more info.
+- Test cases run when serialising extracted parameters to compressed byte array, are taken from [here](https://github.com/dusk-network/plonk/blob/36ee6cb1dd8973d7bccddcad688a8d7eec2fbb9f/src/commitment_scheme/kzg10/key.rs#L331-L465)

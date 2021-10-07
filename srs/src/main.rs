@@ -28,7 +28,7 @@ fn main() -> std::io::Result<()> {
         expected_size() as u64,
         "{}",
         format!(
-            "size of `./extracted.data` should be {}, found to be {}",
+            "expected to be {}b, found to be {}b",
             expected_size(),
             metadata.len(),
         ),

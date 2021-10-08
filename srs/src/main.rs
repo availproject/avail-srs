@@ -1,6 +1,7 @@
 extern crate dusk_plonk;
 extern crate hex;
 extern crate merlin;
+extern crate num_cpus;
 extern crate rand;
 
 use dusk_plonk::bls12_381::{BlsScalar, G1Affine, G2Affine, G2Prepared};
@@ -11,6 +12,9 @@ use std::convert::TryInto;
 use std::env;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
+use std::sync::mpsc::sync_channel;
+use std::thread;
+use std::time::Instant;
 
 const N: usize = 1 << 16;
 
@@ -48,12 +52,37 @@ fn read_points(path: &str) -> std::io::Result<(Vec<u8>, Vec<u8>)> {
 }
 
 fn convert_g1s(g1s: Vec<u8>) -> std::io::Result<Vec<G1Affine>> {
-    let mut g1s_: Vec<G1Affine> = vec![G1Affine::identity(); N];
-
-    for i in 0..N {
-        let start = i * 48;
-        g1s_[i] = G1Affine::from_compressed(&g1s[start..(start + 48)].try_into().unwrap()).unwrap();
+    let mut cpu_count = num_cpus::get();
+    while cpu_count > 0 && N % cpu_count != 0 {
+        cpu_count -= 1;
     }
+    println!("deserialising G1s, using {} CPUs", cpu_count);
+
+    let span = N / cpu_count;
+    let (tx, rx) = sync_channel::<(usize, G1Affine)>(cpu_count * 32);
+    let start_tm = Instant::now();
+
+    for i in 0..cpu_count {
+        let g1s_ = g1s[(i * span * 48)..((i + 1) * span * 48)].to_vec();
+        let tx_ = tx.clone();
+
+        thread::spawn(move || {
+            for k in 0..span {
+                let start = k * 48;
+                let elm = G1Affine::from_compressed(&g1s_[start..(start + 48)].try_into().unwrap())
+                    .unwrap();
+                let gid = i * span + k;
+                tx_.send((gid, elm)).unwrap();
+            }
+        });
+    }
+
+    let mut g1s_: Vec<G1Affine> = vec![G1Affine::identity(); N];
+    for _ in 0..N {
+        let (gid, elm) = rx.recv().unwrap();
+        g1s_[gid] = elm;
+    }
+    println!("deserialised G1s, in {:?}", start_tm.elapsed());
 
     Ok(g1s_)
 }
@@ -280,7 +309,7 @@ fn test_batch_with_aggregation(pp: &PublicParameters) {
     println!("batch with aggregation\t✅\t[TEST]");
 }
 
-// expected size of `./extracted_fl.data`
+// expected size of `./extracted.data`
 fn expected_size() -> usize {
     N  * 48 + // g1 tau powers
     N * 96 + // g2 tau powers

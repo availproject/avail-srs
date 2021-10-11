@@ -28,6 +28,16 @@ challenge_19 | downloaded phase1 **p**owers-**o**f-**t**au file, with N ( = 2 **
 extracted.data | contains N ( = 65536 ) many parameters extracted from `challenge_19`, in compressed form | eee6430020c96dccccc95ca7b433025e70b58359f400ddf06e4aba37a212afd6
 serialised_pp.data | serialised reference strings, ready to be used by Avail validators/ light clients | 3857bb2ec085d4cb8a201c6e40a108870b817f539deadcc3e1e755138f715b10
 
+## Download
+
+We serve aforementioned 3 static files from https://avail-srs.matic.today. Download them using
+
+```bash
+wget -v https://avail-srs.matic.today/{challenge_19, extracted.data, serialised_pp.data}
+```
+
+> After download, make sure you match SHA256 hash with provided one, in above table.
+
 ## Requirements
 
 - Make sure you've rust toolchain installed. You may take a look at: [rustup.rs](https://rustup.rs/)

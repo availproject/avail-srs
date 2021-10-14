@@ -12,7 +12,7 @@ dependencies = [
 [[package]]
 name = "bellman"
 version = "0.2.0"
-source = "git+https://github.com/matterinc/bellman?tag=0.2.0#6e45a4b233e97a71f4a8a0565c8f8d753c04c08f"
+source = "git+https://github.com/matter-labs/bellman?tag=0.2.0#6e45a4b233e97a71f4a8a0565c8f8d753c04c08f"
 dependencies = [
  "bit-vec",
  "blake2-rfc",

@@ -1,33 +1,31 @@
-extern crate rand;
-extern crate crossbeam;
-extern crate num_cpus;
-extern crate blake2;
-extern crate generic_array;
-extern crate typenum;
-extern crate byteorder;
 extern crate bellman;
+extern crate blake2;
+extern crate byteorder;
+extern crate crossbeam;
+extern crate generic_array;
+extern crate num_cpus;
+extern crate rand;
+extern crate typenum;
 
+use self::bellman::pairing::bn256::Bn256;
 use self::bellman::pairing::ff::{Field, PrimeField};
-use self::byteorder::{ReadBytesExt, BigEndian};
-use self::rand::{SeedableRng, Rng, Rand};
-use self::rand::chacha::ChaChaRng;
-use self::bellman::pairing::bn256::{Bn256};
 use self::bellman::pairing::*;
+use self::blake2::{Blake2b, Digest};
+use self::byteorder::{BigEndian, ReadBytesExt};
+use self::generic_array::GenericArray;
+use self::rand::chacha::ChaChaRng;
+use self::rand::*;
+use self::typenum::consts::U64;
+use std::fmt;
 use std::io::{self, Read, Write};
 use std::sync::{Arc, Mutex};
-use self::generic_array::GenericArray;
-use self::typenum::consts::U64;
-use self::blake2::{Blake2b, Digest};
-use std::fmt;
 
-use crate::parameters::*;
 use crate::keypair::*;
+use crate::parameters::*;
 use crate::utils::*;
 
 #[derive(Clone)]
-pub struct Bn256CeremonyParameters {
-
-}
+pub struct Bn256CeremonyParameters {}
 
 impl PowersOfTauParameters for Bn256CeremonyParameters {
     const REQUIRED_POWER: usize = 12; // generate to have roughly 64 million constraints
@@ -42,7 +40,7 @@ impl PowersOfTauParameters for Bn256CeremonyParameters {
 #[test]
 fn test_pubkey_serialization() {
     use self::rand::thread_rng;
-    
+
     let rng = &mut thread_rng();
     let digest = (0..64).map(|_| rng.gen()).collect::<Vec<_>>();
     let (pk, _) = keypair::<_, Bn256>(rng, &digest);
@@ -55,8 +53,8 @@ fn test_pubkey_serialization() {
 
 #[test]
 fn test_power_pairs() {
-    use self::rand::thread_rng;
     use self::bellman::pairing::bn256::{Fr, G1Affine, G2Affine};
+    use self::rand::thread_rng;
     let rng = &mut thread_rng();
 
     let mut v = vec![];
@@ -78,8 +76,8 @@ fn test_power_pairs() {
 
 #[test]
 fn test_same_ratio() {
-    use self::rand::thread_rng;
     use self::bellman::pairing::bn256::{Fr, G1Affine, G2Affine};
+    use self::rand::thread_rng;
 
     let rng = &mut thread_rng();
 
@@ -97,13 +95,13 @@ fn test_same_ratio() {
 fn test_accumulator_serialization() {
     use crate::accumulator::*;
 
-    use self::rand::thread_rng;
     use self::bellman::pairing::bn256::{Bn256, Fr, G1Affine, G2Affine};
+    use self::rand::thread_rng;
     use self::PowersOfTauParameters;
 
     let rng = &mut thread_rng();
     let mut digest = (0..64).map(|_| rng.gen()).collect::<Vec<_>>();
-    let params = Bn256CeremonyParameters{};
+    let params = Bn256CeremonyParameters {};
     let mut acc = Accumulator::<Bn256, _>::new(params.clone());
     let before = acc.clone();
     let (pk, sk) = keypair::<_, Bn256>(rng, &digest);
@@ -114,6 +112,12 @@ fn test_accumulator_serialization() {
     let mut v = Vec::with_capacity(Bn256CeremonyParameters::ACCUMULATOR_BYTE_SIZE - 64);
     acc.serialize(&mut v, UseCompression::No).unwrap();
     assert_eq!(v.len(), Bn256CeremonyParameters::ACCUMULATOR_BYTE_SIZE - 64);
-    let deserialized = Accumulator::deserialize(&mut &v[..], UseCompression::No, CheckForCorrectness::No, params).unwrap();
+    let deserialized = Accumulator::deserialize(
+        &mut &v[..],
+        UseCompression::No,
+        CheckForCorrectness::No,
+        params,
+    )
+    .unwrap();
     assert!(acc == deserialized);
 }

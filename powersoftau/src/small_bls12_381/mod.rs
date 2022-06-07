@@ -1,33 +1,30 @@
-extern crate rand;
-extern crate crossbeam;
-extern crate num_cpus;
-extern crate blake2;
-extern crate generic_array;
-extern crate typenum;
-extern crate byteorder;
 extern crate bellman;
+extern crate blake2;
+extern crate byteorder;
+extern crate crossbeam;
+extern crate generic_array;
+extern crate num_cpus;
+extern crate rand;
+extern crate typenum;
 
+use self::bellman::pairing::bls12_381::Bls12;
 use self::bellman::pairing::ff::{Field, PrimeField};
-use self::byteorder::{ReadBytesExt, BigEndian};
-use self::rand::{SeedableRng, Rng, Rand};
-use self::rand::chacha::ChaChaRng;
-use self::bellman::pairing::bls12_381::{Bls12};
 use self::bellman::pairing::*;
+use self::blake2::{Blake2b, Digest};
+use self::byteorder::{BigEndian, ReadBytesExt};
+use self::generic_array::GenericArray;
+use self::rand::{Rand, Rng, SeedableRng};
+use self::typenum::consts::U64;
+use std::fmt;
 use std::io::{self, Read, Write};
 use std::sync::{Arc, Mutex};
-use self::generic_array::GenericArray;
-use self::typenum::consts::U64;
-use self::blake2::{Blake2b, Digest};
-use std::fmt;
 
-use crate::parameters::*;
 use crate::keypair::*;
+use crate::parameters::*;
 use crate::utils::*;
 
 #[derive(Clone)]
-pub struct Bls12CeremonyParameters {
-
-}
+pub struct Bls12CeremonyParameters {}
 
 impl PowersOfTauParameters for Bls12CeremonyParameters {
     const REQUIRED_POWER: usize = 27; // generate to have roughly 2 million constraints

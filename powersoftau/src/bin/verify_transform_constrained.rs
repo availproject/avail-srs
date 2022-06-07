@@ -1,19 +1,19 @@
-extern crate powersoftau;
 extern crate bellman;
-extern crate memmap;
-extern crate rand;
 extern crate blake2;
 extern crate byteorder;
+extern crate memmap;
+extern crate powersoftau;
+extern crate rand;
 
 // use powersoftau::bls12_381::{Bls12CeremonyParameters};
-use powersoftau::small_bls12_381::{Bls12CeremonyParameters};
-use powersoftau::batched_accumulator::{BachedAccumulator};
-use powersoftau::keypair::{PublicKey};
-use powersoftau::parameters::{UseCompression, CheckForCorrectness};
+use powersoftau::batched_accumulator::BachedAccumulator;
+use powersoftau::keypair::PublicKey;
+use powersoftau::parameters::{CheckForCorrectness, UseCompression};
+use powersoftau::small_bls12_381::Bls12CeremonyParameters;
 
-use std::fs::OpenOptions;
 use bellman::pairing::bls12_381::Bls12;
 use memmap::*;
+use std::fs::OpenOptions;
 
 use std::io::{Read, Write};
 
@@ -24,57 +24,80 @@ const CONTRIBUTION_IS_COMPRESSED: UseCompression = UseCompression::Yes;
 const COMPRESS_NEW_CHALLENGE: UseCompression = UseCompression::No;
 
 fn main() {
-    println!("Will verify and decompress a contribution to accumulator for 2^{} powers of tau", Bls12CeremonyParameters::REQUIRED_POWER);
-    
+    println!(
+        "Will verify and decompress a contribution to accumulator for 2^{} powers of tau",
+        Bls12CeremonyParameters::REQUIRED_POWER
+    );
+
     // Try to load `./challenge` from disk.
     let challenge_reader = OpenOptions::new()
-                            .read(true)
-                            .open("challenge").expect("unable open `./challenge` in this directory");
+        .read(true)
+        .open("challenge")
+        .expect("unable open `./challenge` in this directory");
 
     {
-        let metadata = challenge_reader.metadata().expect("unable to get filesystem metadata for `./challenge`");
+        let metadata = challenge_reader
+            .metadata()
+            .expect("unable to get filesystem metadata for `./challenge`");
         let expected_challenge_length = match PREVIOUS_CHALLENGE_IS_COMPRESSED {
-            UseCompression::Yes => {
-                Bls12CeremonyParameters::CONTRIBUTION_BYTE_SIZE
-            },
-            UseCompression::No => {
-                Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE
-            }
+            UseCompression::Yes => Bls12CeremonyParameters::CONTRIBUTION_BYTE_SIZE,
+            UseCompression::No => Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE,
         };
         if metadata.len() != (expected_challenge_length as u64) {
-            panic!("The size of `./challenge` should be {}, but it's {}, so something isn't right.", expected_challenge_length, metadata.len());
+            panic!(
+                "The size of `./challenge` should be {}, but it's {}, so something isn't right.",
+                expected_challenge_length,
+                metadata.len()
+            );
         }
     }
 
-    let challenge_readable_map = unsafe { MmapOptions::new().map(&challenge_reader).expect("unable to create a memory map for input") };
+    let challenge_readable_map = unsafe {
+        MmapOptions::new()
+            .map(&challenge_reader)
+            .expect("unable to create a memory map for input")
+    };
 
     // Try to load `./response` from disk.
     let response_reader = OpenOptions::new()
-                            .read(true)
-                            .open("response").expect("unable open `./response` in this directory");
+        .read(true)
+        .open("response")
+        .expect("unable open `./response` in this directory");
 
     {
-        let metadata = response_reader.metadata().expect("unable to get filesystem metadata for `./response`");
+        let metadata = response_reader
+            .metadata()
+            .expect("unable to get filesystem metadata for `./response`");
         let expected_response_length = match CONTRIBUTION_IS_COMPRESSED {
-            UseCompression::Yes => {
-                Bls12CeremonyParameters::CONTRIBUTION_BYTE_SIZE 
-            },
+            UseCompression::Yes => Bls12CeremonyParameters::CONTRIBUTION_BYTE_SIZE,
             UseCompression::No => {
-                Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE + Bls12CeremonyParameters::PUBLIC_KEY_SIZE
+                Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE
+                    + Bls12CeremonyParameters::PUBLIC_KEY_SIZE
             }
         };
         if metadata.len() != (expected_response_length as u64) {
-            panic!("The size of `./response` should be {}, but it's {}, so something isn't right.", expected_response_length, metadata.len());
+            panic!(
+                "The size of `./response` should be {}, but it's {}, so something isn't right.",
+                expected_response_length,
+                metadata.len()
+            );
         }
     }
 
-    let response_readable_map = unsafe { MmapOptions::new().map(&response_reader).expect("unable to create a memory map for input") };
+    let response_readable_map = unsafe {
+        MmapOptions::new()
+            .map(&response_reader)
+            .expect("unable to create a memory map for input")
+    };
 
     println!("Calculating previous challenge hash...");
 
     // Check that contribution is correct
 
-    let current_accumulator_hash = BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(&challenge_readable_map);
+    let current_accumulator_hash =
+        BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(
+            &challenge_readable_map,
+        );
 
     println!("Hash of the `challenge` file for verification:");
     for line in current_accumulator_hash.as_slice().chunks(16) {
@@ -91,8 +114,13 @@ fn main() {
     // Check the hash chain - a new response must be based on the previous challenge!
     {
         let mut response_challenge_hash = [0; 64];
-        let memory_slice = response_readable_map.get(0..64).expect("must read point data from file");
-        memory_slice.clone().read_exact(&mut response_challenge_hash).expect("couldn't read hash of challenge file from response file");
+        let memory_slice = response_readable_map
+            .get(0..64)
+            .expect("must read point data from file");
+        memory_slice
+            .clone()
+            .read_exact(&mut response_challenge_hash)
+            .expect("couldn't read hash of challenge file from response file");
 
         println!("`response` was based on the hash:");
         for line in response_challenge_hash.chunks(16) {
@@ -111,7 +139,8 @@ fn main() {
         }
     }
 
-    let response_hash = BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(&response_readable_map);
+    let response_hash =
+        BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(&response_readable_map);
 
     println!("Hash of the `response` file for verification:");
     for line in response_hash.as_slice().chunks(16) {
@@ -126,18 +155,22 @@ fn main() {
     }
 
     // get the contributor's public key
-    let public_key = PublicKey::<Bls12>::read::<Bls12CeremonyParameters>(&response_readable_map, CONTRIBUTION_IS_COMPRESSED)
-                                           .expect("wasn't able to deserialize the response file's public key");
-
+    let public_key = PublicKey::<Bls12>::read::<Bls12CeremonyParameters>(
+        &response_readable_map,
+        CONTRIBUTION_IS_COMPRESSED,
+    )
+    .expect("wasn't able to deserialize the response file's public key");
 
     // check that it follows the protocol
 
-    println!("Verifying a contribution to contain proper powers and correspond to the public key...");
+    println!(
+        "Verifying a contribution to contain proper powers and correspond to the public key..."
+    );
 
     let valid = BachedAccumulator::<Bls12, Bls12CeremonyParameters>::verify_transformation(
         &challenge_readable_map,
         &response_readable_map,
-        &public_key, 
+        &public_key,
         current_accumulator_hash.as_slice(),
         PREVIOUS_CHALLENGE_IS_COMPRESSED,
         CONTRIBUTION_IS_COMPRESSED,
@@ -159,34 +192,49 @@ fn main() {
 
         // Create `./new_challenge` in this directory
         let writer = OpenOptions::new()
-                                .read(true)
-                                .write(true)
-                                .create_new(true)
-                                .open("new_challenge").expect("unable to create `./new_challenge` in this directory");
-
-
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open("new_challenge")
+            .expect("unable to create `./new_challenge` in this directory");
 
         // Recomputation stips the public key and uses hashing to link with the previous contibution after decompression
-        writer.set_len(Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE as u64).expect("must make output file large enough");
+        writer
+            .set_len(Bls12CeremonyParameters::ACCUMULATOR_BYTE_SIZE as u64)
+            .expect("must make output file large enough");
 
-        let mut writable_map = unsafe { MmapOptions::new().map_mut(&writer).expect("unable to create a memory map for output") };
+        let mut writable_map = unsafe {
+            MmapOptions::new()
+                .map_mut(&writer)
+                .expect("unable to create a memory map for output")
+        };
 
         {
-            (&mut writable_map[0..]).write(response_hash.as_slice()).expect("unable to write a default hash to mmap");
+            (&mut writable_map[0..])
+                .write(response_hash.as_slice())
+                .expect("unable to write a default hash to mmap");
 
-            writable_map.flush().expect("unable to write hash to `./new_challenge`");
+            writable_map
+                .flush()
+                .expect("unable to write hash to `./new_challenge`");
         }
 
         BachedAccumulator::<Bls12, Bls12CeremonyParameters>::decompress(
             &response_readable_map,
             &mut writable_map,
-            CheckForCorrectness::No).expect("must decompress a response for a new challenge");
-        
+            CheckForCorrectness::No,
+        )
+        .expect("must decompress a response for a new challenge");
+
         writable_map.flush().expect("must flush the memory map");
 
-        let new_challenge_readable_map = writable_map.make_read_only().expect("must make a map readonly");
+        let new_challenge_readable_map = writable_map
+            .make_read_only()
+            .expect("must make a map readonly");
 
-        let recompressed_hash = BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(&new_challenge_readable_map);
+        let recompressed_hash = BachedAccumulator::<Bls12, Bls12CeremonyParameters>::calculate_hash(
+            &new_challenge_readable_map,
+        );
 
         println!("Here's the BLAKE2b hash of the decompressed participant's response as `new_challenge` file:");
 

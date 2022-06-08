@@ -1,30 +1,30 @@
-extern crate rand;
-extern crate crossbeam;
-extern crate num_cpus;
-extern crate blake2;
-extern crate generic_array;
-extern crate typenum;
-extern crate byteorder;
 extern crate bellman;
+extern crate blake2;
+extern crate byteorder;
+extern crate crossbeam;
+extern crate generic_array;
+extern crate num_cpus;
+extern crate rand;
+extern crate typenum;
 
+use bellman::pairing::bn256::Bn256;
 use bellman::pairing::ff::{Field, PrimeField};
-use byteorder::{ReadBytesExt, BigEndian};
-use rand::{SeedableRng, Rng, Rand};
-use rand::chacha::ChaChaRng;
-use bellman::pairing::bn256::{Bn256};
 use bellman::pairing::*;
+use blake2::{Blake2b, Digest};
+use byteorder::{BigEndian, ReadBytesExt};
+use generic_array::GenericArray;
+use rand::chacha::ChaChaRng;
+use rand::{Rand, Rng, SeedableRng};
+use std::fmt;
 use std::io::{self, Read, Write};
 use std::sync::{Arc, Mutex};
-use generic_array::GenericArray;
 use typenum::consts::U64;
-use blake2::{Blake2b, Digest};
-use std::fmt;
 
 use super::keypair::*;
 
 pub trait PowersOfTauParameters: Clone {
-    const REQUIRED_POWER: usize; 
-    
+    const REQUIRED_POWER: usize;
+
     const G1_UNCOMPRESSED_BYTE_SIZE: usize;
     const G2_UNCOMPRESSED_BYTE_SIZE: usize;
     const G1_COMPRESSED_BYTE_SIZE: usize;
@@ -58,13 +58,11 @@ pub trait PowersOfTauParameters: Clone {
     const EMPIRICAL_BATCH_SIZE: usize = 1 << 21;
 }
 
-
-
 /// Determines if point compression should be used.
 #[derive(Copy, Clone, PartialEq)]
 pub enum UseCompression {
     Yes,
-    No
+    No,
 }
 
 /// Determines if points should becked for correctness during deserialization.
@@ -73,16 +71,15 @@ pub enum UseCompression {
 #[derive(Copy, Clone, PartialEq)]
 pub enum CheckForCorrectness {
     Yes,
-    No
+    No,
 }
-
 
 /// Errors that might occur during deserialization.
 #[derive(Debug)]
 pub enum DeserializationError {
     IoError(io::Error),
     DecodingError(GroupDecodingError),
-    PointAtInfinity
+    PointAtInfinity,
 }
 
 impl fmt::Display for DeserializationError {
@@ -90,7 +87,7 @@ impl fmt::Display for DeserializationError {
         match *self {
             DeserializationError::IoError(ref e) => write!(f, "Disk IO error: {}", e),
             DeserializationError::DecodingError(ref e) => write!(f, "Decoding error: {}", e),
-            DeserializationError::PointAtInfinity => write!(f, "Point at infinity found")
+            DeserializationError::PointAtInfinity => write!(f, "Point at infinity found"),
         }
     }
 }
@@ -113,5 +110,5 @@ pub enum ElementType {
     TauG2,
     AlphaG1,
     BetaG1,
-    BetaG2
+    BetaG2,
 }

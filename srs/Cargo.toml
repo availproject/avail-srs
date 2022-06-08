@@ -1,7 +1,7 @@
 [package]
 name = "srs"
-version = "0.1.0"
-authors = ["Anjan Roy <anjanroy@yandex.com>"]
+version = "0.1.1"
+authors = ["Anjan Roy <anjan.roy@polygon.technology>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,6 +10,6 @@ edition = "2018"
 
 dusk-plonk = { git = "https://github.com/dusk-network/plonk", tag = "v0.3.5" }
 hex = "0.4.3"
-rand = "0.7.0"
+rand = "0.8.5"
 merlin = "2.0.0"
-num_cpus = "1.13.0"
+num_cpus = "1.13.1"

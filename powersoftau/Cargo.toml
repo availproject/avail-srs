@@ -12,18 +12,19 @@ homepage = "https://github.com/matter-labs/powersoftau"
 repository = "https://github.com/matter-labs/powersoftau"
 
 [dependencies]
-rand = "0.4"
-crossbeam = "0.3.0"
-num_cpus = "1.7.0"
-blake2 = "0.6.1"
+rand = "0.4.2"
+rand_chacha = "0.3.1"
+crossbeam = "0.8.1"
+num_cpus = "1.13.1"
+blake2 = "0.8.1"
 generic-array = "0.8.3"
-typenum = "1.9.0"
-byteorder = "1.1.0"
+typenum = "1.15.0"
+byteorder = "1.4.3"
 hex-literal = "0.3.3"
 rust-crypto = "0.2"
 hex = "0.4.3"
 memmap = "0.7.0"
-itertools = "0.8.0"
+itertools = "0.10.3"
 bellman = { git = 'https://github.com/matter-labs/bellman', tag = "0.2.0"}
 
 [features]

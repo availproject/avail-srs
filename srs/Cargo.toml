@@ -10,6 +10,6 @@ edition = "2018"
 
 dusk-plonk = { git = "https://github.com/dusk-network/plonk", tag = "v0.3.5" }
 hex = "0.4.3"
-rand = "0.8.5"
+rand = "0.7.0"
 merlin = "2.0.0"
 num_cpus = "1.13.1"

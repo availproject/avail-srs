@@ -2,11 +2,11 @@
 
 ## Introduction
 
-For Polygon Avail project, we needed to have one publicly verifiable reference string, which can be used for constructing & verifying KZG polynomial commitment proofs, so we decided to make use of Filecoin's Powers of Tau, which also uses BLS12-381 curve.
+For Avail DA, we needed to have one publicly verifiable reference string, which can be used for constructing & verifying KZG polynomial commitment proofs, so we decided to make use of Filecoin's Powers of Tau, which also uses BLS12-381 curve.
 
 ---
 
-Polygon Avail: [avail-docs.matic.today](https://avail-docs.matic.today/)
+Avail: [https://docs.availproject.org](https://docs.availproject.org)
 
 Filecoin's Attestations: [github.com/filecoin-project/phase2-attestations](https://github.com/filecoin-project/phase2-attestations)
 
@@ -16,7 +16,7 @@ Filecoin's Attestations: [github.com/filecoin-project/phase2-attestations](https
 
 > We use **challenge_19** of [phase1](https://trusted-setup.filecoin.io/phase1).
 
-This repository contains programs required for extracting out N( <= 2**27 )-many parameters from `challenge_19`, which are eventually converted into desired serialised format, can be used by Polygon Avail Validators/ Light Clients. During extraction & serialisation, program also asserts public parameters for correctness by running some testcases. 
+This repository contains programs required for extracting out N( <= 2**27 )-many parameters from `challenge_19`, which are eventually converted into desired serialised format, can be used by Avail DA validators / light clients. During extraction & serialisation, program also asserts public parameters for correctness by running some testcases. 
 
 > We use N = 1 << 16 for constructing out reference string
 

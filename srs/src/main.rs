@@ -4,23 +4,21 @@ extern crate merlin;
 extern crate num_cpus;
 extern crate rand;
 
-use dusk_plonk::bls12_381::{BlsScalar, G1Affine, G2Affine, G2Prepared};
-use dusk_plonk::commitment_scheme::kzg10::{CommitKey, OpeningKey, PublicParameters};
-// use dusk_plonk::fft::Polynomial;
 use dusk_bytes::Serializable;
-use dusk_plonk::fft::{EvaluationDomain as PlonkED, Evaluations as PlonkEV};
-use merlin::Transcript;
-use rand::rngs::OsRng;
-use rand::thread_rng;
+use dusk_plonk::bls12_381::{G1Affine, G2Affine};
+use dusk_plonk::commitment_scheme::kzg10::{CommitKey, OpeningKey, PublicParameters};
+// use dusk_plonk::bls12_381::{BlsScalar, G2Prepared};
+// use dusk_plonk::fft::{EvaluationDomain as PlonkED, Evaluations as PlonkEV};
+// use merlin::Transcript;
+// use rand::rngs::OsRng;
+// use rand::thread_rng;
 use std::convert::TryInto;
 use std::env;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::sync::mpsc::sync_channel;
 use std::thread;
 use std::time::Instant;
-
-use std::fs::File;
 
 const N: usize = 1 << 10;
 
@@ -31,12 +29,9 @@ fn write_g1_g2_points(path: &str) -> std::io::Result<()> {
     assert_eq!(
         meta.len(),
         expected_size() as u64,
-        "{}",
-        format!(
-            "expected to be {}b, found to be {}b",
-            expected_size(),
-            meta.len(),
-        ),
+        "expected to be {}b, found to be {}b",
+        expected_size(),
+        meta.len(),
     );
 
     let mut hash: [u8; 64] = [0; 64];
@@ -77,12 +72,9 @@ fn read_points(path: &str) -> std::io::Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     assert_eq!(
         meta.len(),
         expected_size() as u64,
-        "{}",
-        format!(
-            "expected to be {}b, found to be {}b",
-            expected_size(),
-            meta.len(),
-        ),
+        "expected to be {}b, found to be {}b",
+        expected_size(),
+        meta.len(),
     );
 
     let mut hash: [u8; 64] = [0; 64];
@@ -153,35 +145,13 @@ fn convert_g1s(g1s: Vec<u8>) -> std::io::Result<Vec<G1Affine>> {
 fn convert_g2s(g2s: Vec<u8>) -> std::io::Result<Vec<G2Affine>> {
     let mut g2s_: Vec<G2Affine> = vec![G2Affine::identity(); 2];
 
-    for i in 0..2 {
-        let start = i * 96;
-        // using dusk-plonk
-        g2s_[i] = G2Affine::from_bytes(&g2s[start..(start + 96)].try_into().unwrap()).unwrap();
-        // safety check to ensure the deserialisation of points are correct
-        assert!(bool::from(g2s_[i].is_torsion_free()))
-        // using arkworks
-        // g2s_[i] = G2Affine::deserialize_compressed(&g2s[start..(start + 96)]).unwrap()
+    for (i, chunk) in g2s.chunks(96).enumerate().take(2) {
+        g2s_[i] = G2Affine::from_bytes(chunk.try_into().unwrap()).unwrap();
+        assert!(bool::from(g2s_[i].is_torsion_free()));
     }
 
     Ok(g2s_)
 }
-
-// fn get_public_params(g1s: Vec<G1Affine>, g2s: Vec<G2Affine>) -> std::io::Result<PublicParameters> {
-//     let okey = OpeningKey {
-//         g: g1s[0],
-//         h: g2s[0],
-//         beta_h: g2s[1],
-//         prepared_h: G2Prepared::from(g2s[0]),
-//         prepared_beta_h: G2Prepared::from(g2s[1]),
-//     };
-//     let ckey = CommitKey { powers_of_g: g1s };
-//     let pp = PublicParameters {
-//         commit_key: ckey,
-//         opening_key: okey,
-//     };
-
-//     Ok(pp)
-// }
 
 fn main() -> std::io::Result<()> {
     let cli_args: Vec<String> = env::args().collect();
@@ -196,18 +166,10 @@ fn main() -> std::io::Result<()> {
     let (g1s, g2s, beta_g2) = read_points(&cli_args[1])?;
     let commit_key = CommitKey::from_slice(&g1s).unwrap();
 
-    // println!("{:?}", commit_key.to_raw_var_bytes());
     let g1s = convert_g1s(g1s)?;
     let g2s = convert_g2s(g2s)?;
-
-    // for arkworks
-    // println!("g1: {}", g1s[0]);
-    // println!("g2: {}", g2s[0]);
-
     let g1 = g1s[0].to_bytes();
     let g2 = g2s[0].to_bytes();
-    // println!("g1: {}", hex::encode(g1));
-    // println!("g2: {}", hex::encode(g2));
     let mut opening_key_bytes: Vec<u8> = Vec::new();
     opening_key_bytes.extend_from_slice(&g1);
     opening_key_bytes.extend_from_slice(&g2);
@@ -239,49 +201,6 @@ fn main() -> std::io::Result<()> {
         "exported {} serialised raw public_parameters into `./pp_raw_{}.data`\t✅",
         N, N
     );
-
-    // opening_key.check(point, proof)
-
-    // let poly = Polynomial::rand(degree, &mut OsRng);
-
-    // let witness = commit_key.compute_single_witness(&dp_poly, &point);
-    // let proof = open_single(&ck, &poly, &value, &point)?;
-
-    // let ok = opening_key.check(point, proof);
-    // assert!(ok);
-
-    // let mut g1_g2 = g1s;
-    // g1_g2.extend(g2s);
-    // g1_g2.extend(beta_g2);
-    // println!("Size of the bytes data: {}", g1_g2.len());
-    // let opening_key =  OpeningKey::from_bytes(&g1_g2).unwrap();
-    // println!("Openingkey size: {}", OpeningKey::SIZE);
-    // println!("{:?}", opening_key.to_raw_var_bytes());
-    // let pp = unsafe { PublicParameters::from_slice_unchecked(&g1_g2) };
-
-    // let pp = get_public_params(g1s, g2s)?;
-
-    // println!(
-    //     "public params of max degree: {}\t[OBTAINED]",
-    //     pp.max_degree()
-    // );
-
-    // test_basic_commitment(&pp);
-    // test_batch_verification(&pp);
-    // test_aggregate_witness(&pp);
-    // test_batch_with_aggregation(&pp);
-
-    // let pp_bytes = pp.to_bytes();
-    // let mut serialised_pp = OpenOptions::new()
-    //     .read(true)
-    //     .write(true)
-    //     .create(true)
-    //     .open("serialised_pp.data")?;
-
-    // serialised_pp.set_len(pp_bytes.len() as u64)?;
-    // serialised_pp.write(&pp_bytes)?;
-    // serialised_pp.flush()?;
-    // println!("exported serialised public params to `./serialised_pp.data`");
 
     Ok(())
 }

@@ -17,7 +17,7 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 
-const N: usize = 1 << 16;
+const N: usize = 1 << 10;
 const MAX_PARAMS: usize = 1 << 27;
 type B = BachedAccumulator<Bls12, Bls12CeremonyParameters>;
 

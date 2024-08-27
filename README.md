@@ -18,22 +18,23 @@ Filecoin's Attestations: [github.com/filecoin-project/phase2-attestations](https
 
 This repository contains programs required for extracting out N( <= 2**27 )-many parameters from `challenge_19`, which are eventually converted into desired serialised format, can be used by Polygon Avail Validators/ Light Clients. During extraction & serialisation, program also asserts public parameters for correctness by running some testcases. 
 
-> We use N = 1 << 16 for constructing out reference string
+> We use N = 1 << 10 for constructing out reference string
 
-If you follow steps below, at last you must have `extracted.data` & `serialised_pp.data`.
+If you follow steps below, you must have following files: `extracted.data`, `g1_g2_1024.txt`, `pp_1024.data` & `pp_raw_1024.data`.
 
 file name | significance | sha256
 --- | --- | ---
 challenge_19 | downloaded phase1 **p**owers-**o**f-**t**au file, with N ( = 2 ** 27 ) many parameters | 7f311127652a83e3499e7d5e6c9a3dd78f6cb4bd27ea9ce8c1af3818a97adc8f
-extracted.data | contains N ( = 65536 ) many parameters extracted from `challenge_19`, in compressed form | eee6430020c96dccccc95ca7b433025e70b58359f400ddf06e4aba37a212afd6
-serialised_pp.data | serialised reference strings, ready to be used by Avail validators/ light clients | 3857bb2ec085d4cb8a201c6e40a108870b817f539deadcc3e1e755138f715b10
+extracted.data | contains N ( = 1024 ) many parameters extracted from `challenge_19`, in compressed form | 942d0579b83c70dcec7eec2075ff5a13ff7d72a99c21bbcb96a4a1c1865d71fd
+g1_g2_1024.txt | contains g1 & g2 points, which can be used to derive pp for [poly_multiproof](https://github.com/availproject/poly-multiproof/releases/tag/v0.0.1) | 942d0579b83c70dcec7eec2075ff5a13ff7d72a99c21bbcb96a4a1c1865d71fd
+pp_1024.data | serialised reference strings, ready to be used by Avail validators/ light clients | 6f2a6fc74dd09fb70969a0843ca9fa971c26f224cb2bf11ce18d3c9c2b385a84
 
 ## Download
 
-We serve aforementioned 3 static files from https://avail-srs.matic.today. Download them using
+We serve aforementioned 4 static files from https://avail-srs.matic.today. Download them using
 
 ```bash
-wget -v https://avail-srs.matic.today/{challenge_19, extracted.data, serialised_pp.data}
+wget -v https://avail-srs.matic.today/{challenge_19, extracted.data, g1_g2_1024.txt, pp_1024.data}
 ```
 
 > After download, make sure you match SHA256 hash with provided one, in above table.
@@ -62,12 +63,13 @@ sha256sum extracted.data # match with 👆 table
 popd
 ```
 
-- Finally serialise into desired format, must generate `serialised_pp.data`
+- Finally serialise into desired formats
 
 ```bash
 pushd srs
 cargo run <absolute-path-to-extracted.data>
-sha256sum serialised_pp.data # match with 👆 table
+sha256sum g1_g2_1024.txt # match with 👆 table
+sha256sum pp_1024.data # match with 👆 table
 popd
 ```
 
@@ -103,7 +105,7 @@ File layout looks like
 
 ---
 
-After parameter extraction, generated `extracted.data` holds 1 << 16 parameters, stored in compressed form.
+After parameter extraction, generated `extracted.data` holds 1 << 10 parameters, stored in compressed form.
 
 > In uncompressed form G1 points: 48 bytes while G2 points: 96 bytes
 
@@ -128,17 +130,17 @@ File layout looks like
 
 ---
 
-After serialisation step, reference string holding file `serialised_pp.data` has everything an Avail Validator/ Light Client wants to have for proof generation/ verification.
+After serialisation step, reference string holding file `pp_1024.data` has everything an Avail Validator/ Light Client wants to have for proof generation/ verification.
 
 It holds commit key & opening key in compressed form. Use following code snippet for deserialising reference string from byte array.
 
 ```rust
 let mut data: Vec<u8> = Vec::new();
 
-let fd = OpenOptions::new().read(true).open("serialised_pp.data")?;
+let fd = OpenOptions::new().read(true).open("pp_1024.data")?;
 fd.read_to_end(&mut data)?;
 
-let degree = 1 << 10; // say 1024 for this case
+let degree = 1 << 8; // say 256 for this case
 
 let pp = PublicParameters::from_bytes(&data[..]).unwrap();
 let (proving_key, verification_key) = pp.trim(degree).unwrap(); // create/ verify proofs !

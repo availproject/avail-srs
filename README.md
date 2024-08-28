@@ -31,10 +31,10 @@ pp_1024.data | serialised reference strings, ready to be used by Avail validator
 
 ## Download
 
-We serve aforementioned 4 static files from https://avail-srs.matic.today. Download them using
+We serve aforementioned 4 static files from https://srs.availproject.org. Download them using
 
 ```bash
-wget -v https://avail-srs.matic.today/{challenge_19, extracted.data, g1_g2_1024.txt, pp_1024.data}
+wget -v https://srs.availproject.org/{challenge_19, extracted.data, g1_g2_1024.txt, pp_1024.data}
 ```
 
 > After download, make sure you match SHA256 hash with provided one, in above table.

@@ -43,8 +43,8 @@ fn main() -> std::io::Result<()> {
     let challenge_readable_map = unsafe { MmapOptions::new().map(&challenge_reader).unwrap() };
 
     let mut hash = [0; 64];
-    let memory_slice = challenge_readable_map.get(0..64).unwrap();
-    memory_slice.clone().read_exact(&mut hash)?;
+    let mut memory_slice = challenge_readable_map.get(0..64).unwrap();
+    memory_slice.read_exact(&mut hash)?;
     println!("hash: {}", hex::encode(hash));
 
     let mut out = OpenOptions::new()

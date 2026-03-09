@@ -1,10 +1,10 @@
 extern crate bellman;
 extern crate blake2;
 extern crate byteorder;
-extern crate crypto;
 extern crate memmap;
 extern crate powersoftau;
 extern crate rand;
+extern crate sha2;
 
 // use powersoftau::bls12_381::{Bls12CeremonyParameters};
 use powersoftau::batched_accumulator::BachedAccumulator;
@@ -40,10 +40,9 @@ fn main() {
     // Create an RNG based on the outcome of the random beacon
     let mut rng = {
         use byteorder::{BigEndian, ReadBytesExt};
-        use crypto::digest::Digest;
-        use crypto::sha2::Sha256;
         use rand::chacha::ChaChaRng;
         use rand::SeedableRng;
+        use sha2::{Digest, Sha256};
 
         // Place block hash here (block number #564321)
         let mut cur_hash: [u8; 32] =
@@ -66,8 +65,8 @@ fn main() {
             }
 
             let mut h = Sha256::new();
-            h.input(&cur_hash);
-            h.result(&mut cur_hash);
+            h.update(cur_hash);
+            cur_hash.copy_from_slice(&h.finalize());
         }
 
         print!("Final result of beacon: ");

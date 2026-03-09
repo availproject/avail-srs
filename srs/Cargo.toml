@@ -11,8 +11,6 @@ edition = "2018"
 dusk-plonk = { git = "https://github.com/availproject/plonk.git", tag = "v0.12.0-polygon-2"}
 dusk-bytes = "0.1"
 
-ark-bls12-381 = "0.4.0"
-ark-serialize = "0.4.0"
 hex = "0.4.3"
 rand = { version = "0.8", features = ["alloc", "small_rng"]}
 # rand = "0.7.0"

@@ -164,11 +164,10 @@ fn main() {
 
     {
         let mut challenge_hash = [0; 64];
-        let memory_slice = readable_map
+        let mut memory_slice = readable_map
             .get(0..64)
             .expect("must read point data from file");
         memory_slice
-            .clone()
             .read_exact(&mut challenge_hash)
             .expect("couldn't read hash of challenge file from response file");
 

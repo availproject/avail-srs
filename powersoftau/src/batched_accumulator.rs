@@ -709,10 +709,10 @@ impl<E: Engine, P: PowersOfTauParameters> BachedAccumulator<E, P> {
             };
             let position = Self::calculate_mmap_position(index, element_type, compression);
             let element_size = Self::get_size(element_type, compression);
-            let memory_slice = input_map
+            let mut memory_slice = input_map
                 .get(position..position + element_size)
                 .expect("must read point data from file");
-            memory_slice.clone().read_exact(encoded.as_mut())?;
+            memory_slice.read_exact(encoded.as_mut())?;
         }
 
         // Allocate space for the deserialized elements

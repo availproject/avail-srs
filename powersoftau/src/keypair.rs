@@ -245,10 +245,10 @@ impl<E: Engine> PublicKey<E> {
         ) -> Result<C, DeserializationError> {
             let mut repr = C::Uncompressed::empty();
             let element_size = C::Uncompressed::size();
-            let memory_slice = input_map
+            let mut memory_slice = input_map
                 .get(position..position + element_size)
                 .expect("must read point data from file");
-            memory_slice.clone().read_exact(repr.as_mut())?;
+            memory_slice.read_exact(repr.as_mut())?;
             let v = repr.into_affine()?;
 
             if v.is_zero() {

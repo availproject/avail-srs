@@ -330,11 +330,10 @@ dependencies = [
 
 [[package]]
 name = "generic-array"
-version = "0.8.4"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2297fb0e3ea512e380da24b52dca3924028f59df5e3a17a18f81d8349ca7ebe"
+checksum = "6d00328cedcac5e81c683e5620ca6a30756fc23027ebf9bff405c0e8da1fbb7e"
 dependencies = [
- "nodrop",
  "typenum",
 ]
 
@@ -512,7 +511,7 @@ dependencies = [
  "blake2",
  "byteorder",
  "crossbeam 0.8.4",
- "generic-array 0.8.4",
+ "generic-array 0.9.1",
  "hex 0.4.3",
  "hex-literal",
  "itertools",
